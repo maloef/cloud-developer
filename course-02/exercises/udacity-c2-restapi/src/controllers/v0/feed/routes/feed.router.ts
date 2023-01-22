@@ -16,15 +16,36 @@ router.get('/', async (req: Request, res: Response) => {
     res.send(items);
 });
 
-//@TODO
-//Add an endpoint to GET a specific resource by Primary Key
+// endpoint to GET a specific resource by Primary Key
+router.get('/:id', async (req: Request, res: Response) => {
+    let { id } = req.params;
+    const item = await FeedItem.findByPk(id);
+    if (!item) {
+        res.status(404).send()
+    } else {
+        res.status(200).send(item)
+    }
+});
 
 // update a specific resource
-router.patch('/:id', 
-    requireAuth, 
-    async (req: Request, res: Response) => {
-        //@TODO try it yourself
-        res.status(500).send("not implemented")
+router.patch('/:id', requireAuth, async (req: Request, res: Response) => {
+    let { id } = req.params
+    const caption = req.body.caption
+    const url = req.body.url
+
+    if (!id || !caption || !url) {
+        res.status(400).send("missing id, caption, or url")        
+    } else {
+        const item = await FeedItem.findByPk(id);
+        if (!item) {
+            res.status(400).send(`no item with id ${id} exists`)
+        } else {
+            item.caption = caption
+            item.url = url
+            const saved_item = await item.save();
+            res.status(200).send(saved_item)
+        }
+    }
 });
 
 
@@ -34,6 +55,8 @@ router.get('/signed-url/:fileName',
     async (req: Request, res: Response) => {
     let { fileName } = req.params;
     const url = AWS.getPutSignedUrl(fileName);
+    console.log("fileName: ", fileName)
+    console.log("url: ", url)
     res.status(201).send({url: url});
 });
 
