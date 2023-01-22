@@ -31,7 +31,7 @@ import { Car, cars as cars_list } from './cars';
 
       if ( !name ) {
         return res.status(400)
-                  .send(`name is required`);
+                  .send(`name is required in path`);
       }
 
       return res.status(200)
@@ -45,7 +45,7 @@ import { Car, cars as cars_list } from './cars';
 
     if ( !name ) {
       return res.status(400)
-                .send(`name is required`);
+                .send(`name is required as query param`);
     }
 
     return res.status(200)
@@ -70,15 +70,47 @@ import { Car, cars as cars_list } from './cars';
                 .send(`Welcome to the Cloud, ${name}!`);
   } );
 
-  // @TODO Add an endpoint to GET a list of cars
-  // it should be filterable by make with a query paramater
+  // Add an endpoint to GET a list of cars
+  // filterable by make with a query paramater
+  app.get( "/cars/", ( req: Request, res: Response ) => {
+    let { make } = req.query;
 
-  // @TODO Add an endpoint to get a specific car
-  // it should require id
-  // it should fail gracefully if no matching car is found
+    let cars_list = cars;
+    if (make) {
+      cars_list = cars.filter((car) => car.make === make);
+    }
+    return res.status(200).send(cars_list);
+  });
 
-  /// @TODO Add an endpoint to post a new car to our list
+  // get a specific car
+  // require id
+  // fail gracefully if no matching car is found
+  app.get( "/cars/:id", ( req: Request, res: Response ) => {
+    let { id } = req.params;
+    if (!id) {
+      return res.status(400).send('id is required in path');
+    }
+        
+    const car = cars.filter((car) => car.id == Number(id));
+    if (car && car.length === 0) {
+      return res.status(404).send(`car with id ${id} not found`);  
+    }
+    return res.status(200).send(car);
+  });
+
+  /// Add an endpoint to post a new car to our list
   // it should require id, type, model, and cost
+  app.post( "/cars", async ( req: Request, res: Response ) => {
+    const { make, type, model, cost, id } = req.body;
+
+    if ( !make || !type || !model || !cost || !id ) {
+      return res.status(400).send(`make, type, model, cost, id is required in body`);
+    }
+    const car: Car = {make: make, type: type, model: model, cost: cost, id: id};
+    cars.push(car)
+
+    return res.status(201).send(car);
+  } );
 
   // Start the Server
   app.listen( port, () => {
