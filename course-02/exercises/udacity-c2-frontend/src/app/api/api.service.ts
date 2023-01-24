@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders,  HttpErrorResponse, HttpRequest, HttpEvent } from '@angular/common/http';
+import { HttpClient, HttpHeaders,  HttpErrorResponse, HttpRequest, HttpEvent, HttpEventType } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 import { FeedItem } from '../feed/models/feed-item.model';
@@ -31,6 +31,7 @@ export class ApiService {
 
   get(endpoint): Promise<any> {
     const url = `${API_HOST}${endpoint}`;
+    console.log("url: ", url)
     const req = this.http.get(url, this.httpOptions).pipe(map(this.extractData));
 
     return req
@@ -43,6 +44,7 @@ export class ApiService {
 
   post(endpoint, data): Promise<any> {
     const url = `${API_HOST}${endpoint}`;
+    console.log("url: ", url, "data: ", data)
     return this.http.post<HttpEvent<any>>(url, data, this.httpOptions)
             .toPromise()
             .catch((e) => {
@@ -53,6 +55,7 @@ export class ApiService {
 
   async upload(endpoint: string, file: File, payload: any): Promise<any> {
     const signed_url = (await this.get(`${endpoint}/signed-url/${file.name}`)).url;
+    console.log("signed url: ", signed_url)
 
     const headers = new HttpHeaders({'Content-Type': file.type});
     const req = new HttpRequest( 'PUT', signed_url, file,

@@ -27,6 +27,7 @@ function generateJWT(user: User): string {
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
+    console.log("Checking authentication for headers: ", req.headers)
     if (!req.headers || !req.headers.authorization){
          return res.status(401).send({ message: 'No authorization headers.' });
     }
