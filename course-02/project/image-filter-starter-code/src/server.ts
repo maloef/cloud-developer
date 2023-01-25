@@ -1,6 +1,8 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import Jimp from 'jimp/*';
+import { finished } from 'stream';
 
 (async () => {
 
@@ -26,10 +28,19 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //    image_url: URL of a publicly accessible image
   // RETURNS
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
+  app.get( "/filteredimage", async ( req, res ) => {
+    //console.log("req:", req)
+    const url = req.query.image_url
+    console.log("urL: ", url)
+    if (!url) {
+      return res.status(400).send("query param image_url missing")
+    }
+    const filtered = await filterImageFromURL(url)
+    console.log("filtered: ", filtered)
+    res.status(200).sendFile(filtered)
 
-  /**************************************************************************** */
-
-  //! END @TODO1
+    res.on('finish', () => deleteLocalFiles([filtered]))
+  } );
   
   // Root Endpoint
   // Displays a simple message to the user
