@@ -35,11 +35,17 @@ import { finished } from 'stream';
     if (!url) {
       return res.status(400).send("query param image_url missing")
     }
-    const filtered = await filterImageFromURL(url)
-    console.log("filtered: ", filtered)
-    res.status(200).sendFile(filtered)
 
-    res.on('finish', () => deleteLocalFiles([filtered]))
+    try {
+      const filtered = await filterImageFromURL(url)
+      console.log("filtered: ", filtered)
+      res.status(200).sendFile(filtered)
+  
+      res.on('finish', () => deleteLocalFiles([filtered]))      
+    } catch(error) {
+      console.error(error)
+      res.status(500).send("could not process image file from url " + url)
+    }
   } );
   
   // Root Endpoint
