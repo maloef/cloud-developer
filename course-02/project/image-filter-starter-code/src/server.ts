@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 import Jimp from 'jimp/*';
@@ -15,7 +15,6 @@ import { finished } from 'stream';
   // Use the body parser middleware for post requests
   app.use(bodyParser.json());
 
-  // @TODO1 IMPLEMENT A RESTFUL ENDPOINT
   // GET /filteredimage?image_url={{URL}}
   // endpoint to filter an image from a public url.
   // IT SHOULD
@@ -28,9 +27,9 @@ import { finished } from 'stream';
   //    image_url: URL of a publicly accessible image
   // RETURNS
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
-  app.get( "/filteredimage", async ( req, res ) => {
+  app.get( "/filteredimage", async (req: Request, res: Response) => {
     //console.log("req:", req)
-    const url = req.query.image_url
+    const url: string = req.query.image_url
     console.log("urL: ", url)
     if (!url) {
       return res.status(400).send("query param image_url missing")
