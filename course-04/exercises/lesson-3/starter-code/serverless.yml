@@ -1,5 +1,4 @@
-service:
-  name: serverless-udagram-app
+service: serverless-udagram-app
 
 plugins:
   - serverless-webpack
@@ -8,10 +7,10 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs14.x
 
   stage: ${opt:stage, 'dev'}
-  region: ${opt:region, 'us-east-1'}
+  region: ${opt:region, 'eu-central-1'}
 
   environment:
     GROUPS_TABLE: Groups-${self:provider.stage}
@@ -28,6 +27,7 @@ provider:
     - Effect: Allow
       Action:
         - dynamodb:Query
+        - dynamodb:PutItem
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.IMAGES_TABLE}
     - Effect: Allow
       Action:
@@ -55,6 +55,7 @@ functions:
           method: get
           path: groups
           cors: true
+          reqValidatorName: NullRequestValidator
 
   CreateGroup:
     handler: src/lambda/http/createGroup.handler
@@ -64,11 +65,10 @@ functions:
           path: groups
           cors: true
           reqValidatorName: RequestBodyValidator
-          documentation:
-            summary: Create a new group
-            description: Create a new group
-            requestModels:
-              'application/json': GroupRequest
+          request:
+            # Schema that will be used to validate incoming requests
+            schemas:
+              application/json: ${file(models/create-group-request.json)}
 
   GetImages:
     handler: src/lambda/http/getImages.handler
@@ -77,9 +77,20 @@ functions:
           method: get
           path: groups/{groupId}/images
           cors: true
+          reqValidatorName: NullRequestValidator
 
   CreateImage:
     handler: src/lambda/http/createImage.handler
+    events:
+      - http:
+          method: post
+          path: /groups/{groupId}/images
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          request:
+            # Schema that will be used to validate incoming requests
+            schemas:
+              application/json: ${file(models/create-image-request.json)}    
 
 resources:
   Resources:
@@ -128,4 +139,13 @@ resources:
           Ref: ApiGatewayRestApi
         ValidateRequestBody: true
         ValidateRequestParameters: false
+
+    NullRequestValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'null-request-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: false
+        ValidateRequestParameters: false        
 
