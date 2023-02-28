@@ -1,5 +1,4 @@
-service:
-  name: serverless-udagram-app
+service: serverless-udagram-app
 
 plugins:
   - serverless-webpack
@@ -11,16 +10,16 @@ provider:
   runtime: nodejs12.x
 
   stage: ${opt:stage, 'dev'}
-  region: ${opt:region, 'us-east-1'}
+  region: ${opt:region, 'eu-central-1'}
 
   environment:
     GROUPS_TABLE: Groups-${self:provider.stage}
     IMAGES_TABLE: Images-${self:provider.stage}
     IMAGE_ID_INDEX: ImageIdIndex
     CONNECTIONS_TABLE: Connections-${self:provider.stage}
-    IMAGES_S3_BUCKET: serverless-udagram-images-${self:provider.stage}
+    IMAGES_S3_BUCKET: serverless-udagram-images-818222958857-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
-    THUMBNAILS_S3_BUCKET: serverless-udagram-thumbnail-${self:provider.stage}
+    THUMBNAILS_S3_BUCKET: serverless-udagram-thumbnail-818222958857-${self:provider.stage}
     AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
     AUTH_0_SECRET_FIELD: auth0Secret
 
@@ -66,24 +65,11 @@ provider:
 
 custom:
   topicName: imagesTopic-${self:provider.stage}
-  documentation:
-    api:
-      info:
-        version: v1.0.0
-        title: Udagram API
-        description: Serverless application for images sharing
-    models:
-      - name: GroupRequest
-        contentType: application/json
-        schema: ${file(models/create-group-request.json)}
-      - name: ImageRequest
-        contentType: application/json
-        schema: ${file(models/create-image-request.json)}
 
 functions:
 
-  RS256Auth:
-    handler: src/lambda/auth/rs256Auth0Authorizer.handler
+  # RS256Auth:
+  #   handler: src/lambda/auth/rs256Auth0Authorizer.handler
 
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
@@ -95,6 +81,7 @@ functions:
           method: get
           path: groups
           cors: true
+          reqValidatorName: NullRequestValidator
 
   CreateGroup:
     handler: src/lambda/http/createGroup.handler
@@ -103,13 +90,8 @@ functions:
           method: post
           path: groups
           cors: true
-          authorizer: RS256Auth
+          authorizer: Auth
           reqValidatorName: RequestBodyValidator
-          documentation:
-            summary: Create a new group
-            description: Create a new group
-            requestModels:
-              'application/json': GroupRequest
 
   GetImages:
     handler: src/lambda/http/getImages.handler
@@ -118,21 +100,17 @@ functions:
           method: get
           path: groups/{groupId}/images
           cors: true
+          reqValidatorName: NullRequestValidator
 
   CreateImage:
     handler: src/lambda/http/createImage.handler
     events:
       - http:
           method: post
-          authorizer: RS256Auth
+          authorizer: Auth
           path: groups/{groupId}/images
           cors: true
           reqValidatorName: RequestBodyValidator
-          documentation:
-            summary: Create a new image
-            description: Create a new image
-            requestModels:
-              'application/json': ImageRequest
 
   SendUploadNotifications:
     environment:
@@ -259,6 +237,15 @@ resources:
           Ref: ApiGatewayRestApi
         ValidateRequestBody: true
         ValidateRequestParameters: false
+
+    NullRequestValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'null-request-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: false
+        ValidateRequestParameters: false        
 
     AttachmentsBucket:
       Type: AWS::S3::Bucket
