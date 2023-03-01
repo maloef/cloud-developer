@@ -92,6 +92,21 @@ custom:
       port: 8000
       inMemory: true
       migrate: true
+      # seed: true
+    stages: # Add this section of the config
+      - dev
+    # seed:
+      # Categories of data. We can optionally load just some of them
+      # users:
+      #   sources:
+      #     - table: users
+      #       sources: [./users.json]
+      #     - table: user-roles
+      #       sources: [./userRoles.json]
+      # posts:
+      #   sources:
+      #     - table: blog-posts
+      #       sources: [./blogPosts.json]       
 
   documentation:
     api:

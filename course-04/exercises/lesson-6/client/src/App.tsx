@@ -19,6 +19,7 @@ export interface AppState {}
 
 export default class App extends Component<AppProps, AppState> {
   constructor(props: AppProps) {
+    console.log("URL:", `${process.env.PUBLIC_URL}`)
     super(props)
 
     this.handleLogin = this.handleLogin.bind(this)
