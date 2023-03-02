@@ -33,14 +33,14 @@ provider:
     # Enable API Gateway logs
     restApi: true
 
-  iam:
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - xray:PutTelemetryRecords
-            - xray:PutTraceSegments
-          Resource: "*"    
+  # iam:
+  #   role:
+  #     statements:
+  #       - Effect: Allow
+  #         Action:
+  #           - xray:PutTelemetryRecords
+  #           - xray:PutTraceSegments
+  #         Resource: "*"    
 
 functions:
 
@@ -78,7 +78,7 @@ functions:
           reqValidatorName: RequestBodyValidator
           authorizer: Auth
           request:
-            schemas:
+            schema:
               application/json: ${file(models/create-todo-model.json)}
     iamRoleStatements:
       - Effect: Allow
@@ -98,7 +98,7 @@ functions:
           reqValidatorName: RequestBodyValidator
           authorizer: Auth
           request:
-            schemas:
+            schema:
               application/json: ${file(models/update-todo-model.json)}
     iamRoleStatements:
       - Effect: Allow
