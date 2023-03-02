@@ -1,4 +1,4 @@
-org: maloef
+#org: maloef
 app: serverless-todo-app
 service: serverless-todo-app
 
@@ -6,6 +6,7 @@ plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
   - serverless-plugin-tracing
+  - serverless-reqvalidator-plugin
 
 provider:
   name: aws
@@ -26,7 +27,7 @@ provider:
     TODOS_TABLE: Todos-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
     ATTACHMENT_S3_BUCKET: serverless-todo-images-${self:provider.environment.ACCOUNT_ID}-${self:provider.stage}
-    SIGNED_URL_EXPIRATION: 36000
+    SIGNED_URL_EXPIRATION: 3600
 
   logs:
     # Enable API Gateway logs
@@ -39,7 +40,7 @@ provider:
           Action:
             - xray:PutTelemetryRecords
             - xray:PutTraceSegments
-          Resource: "*"
+          Resource: "*"    
 
 functions:
 
@@ -55,6 +56,7 @@ functions:
           method: get
           path: todos
           cors: true
+          reqValidatorName: RequestParametersValidator
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
@@ -73,6 +75,7 @@ functions:
           method: post
           path: todos
           cors: true
+          reqValidatorName: RequestBodyValidator
           authorizer: Auth
           request:
             schemas:
@@ -92,6 +95,7 @@ functions:
           method: patch
           path: todos/{todoId}
           cors: true
+          reqValidatorName: RequestBodyValidator
           authorizer: Auth
           request:
             schemas:
@@ -111,6 +115,7 @@ functions:
           method: delete
           path: todos/{todoId}
           cors: true
+          reqValidatorName: RequestParametersValidator
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
@@ -127,6 +132,7 @@ functions:
           method: post
           path: todos/{todoId}/attachment
           cors: true
+          reqValidatorName: RequestParametersValidator
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
@@ -149,6 +155,24 @@ resources:
         ResponseType: DEFAULT_4XX
         RestApiId:
           Ref: ApiGatewayRestApi
+
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+
+    RequestParametersValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-parameters-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: false
+        ValidateRequestParameters: true               
     
     # DONE: Create a DynamoDB table with local secondary index and a composite key
     TodosTable:
@@ -157,29 +181,23 @@ resources:
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
-          - AttributeName: createdAt
-            AttributeType: S
           - AttributeName: todoId
             AttributeType: S
-          - AttributeName: name
-            AttributeType: S
-          - AttributeName: dueDate
-            AttributeType: S
-          - AttributeName: done
-            AttributeType: BOOL
-          - AttributeName: attachmentUrl
+          - AttributeName: createdAt
             AttributeType: S
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
-          - AttributeName: createdAt
+          - AttributeName: todoId
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
         LocalSecondaryIndexes:
-          - IndexName: dueDateLsi
+          - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
             KeySchema:
-            - AttributeName: dueDate
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
               KeyType: RANGE
             Projection:
               ProjectionType: ALL      
@@ -202,7 +220,7 @@ resources:
                 - POST
                 - DELETE
                 - HEAD
-              MaxAge: 3600   
+              MaxAge: ${self:provider.environment.SIGNED_URL_EXPIRATION}   
 
     # DONE: Complete the policy below and attach it to the bucket defined above
     # For cross referencing the name of the bucket, use "!Ref AttachmentsBucket"
@@ -213,10 +231,9 @@ resources:
           Id: AttachmentsBucketPolicy
           Version: "2012-10-17"
           Statement:
-            - Effect: Allow
-              'Principal': {
-                'AWS': '${self:provider.environment.ACCOUNT_ID}'
-              }
-              Action: 's3:*'
-              Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'
+            - Sid: PublicReadForGetBucketObjects
+              Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'          
         Bucket: !Ref AttachmentsBucket      
