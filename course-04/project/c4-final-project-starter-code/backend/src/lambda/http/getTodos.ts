@@ -14,14 +14,16 @@ const logger = createLogger('getTodos')
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const userId = getUserId(event)
-    logger.info('getting todos for user', userId)
+    logger.info('getting todos for user ' + userId)
 
-    const todos = getTodosForUser(userId)
+    const todos = await getTodosForUser(userId)
+    logger.info('number of todos found: ' + todos.length)
+    logger.info('todos found: ' + todos)
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        todos: todos
+        items: todos
       })
     }  
   }

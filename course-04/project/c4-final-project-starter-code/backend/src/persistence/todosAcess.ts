@@ -17,7 +17,7 @@ export class TodosAccess {
     }
   
     async getTodosForUser(userId: string): Promise<TodoItem[]> {
-        logger.info('Getting all todos for user', userId)
+        logger.info('Getting all todos for user ' + userId)
   
       const result = await this.docClient.query({
         TableName: this.todosTable,
@@ -27,8 +27,10 @@ export class TodosAccess {
         }        
       }).promise()
   
-      const items = result.Items
-      return items as TodoItem[]
+      const items = result.Items as TodoItem[]
+      logger.info('number of items found: ' + items.length)
+      
+      return items
     }
   
     async createTodo(todo: TodoItem): Promise<TodoItem> {

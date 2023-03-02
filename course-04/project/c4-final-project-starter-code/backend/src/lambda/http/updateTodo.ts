@@ -18,16 +18,16 @@ export const handler = middy(
     // DONE: Update a TODO item with the provided id using values in the "updatedTodo" object
 
     const userId = getUserId(event)
-    logger.info('updating todo with todoId', todoId,  'for user', userId, ": ", updateTodoRequest)
+    logger.info('updating todo with todoId ' + todoId + ' for user ' + userId + ', updateRequest: ' + updateTodoRequest)
 
     try {
-      const newTodo = updateTodo(userId, todoId, updateTodoRequest)
-      logger.info("updated todo:", newTodo);
+      const newTodo = await updateTodo(userId, todoId, updateTodoRequest)
+      logger.info('updated todo: ' + newTodo);
 
       return {
         statusCode: 200,
         body: JSON.stringify({
-          todo: newTodo
+          newTodo
         })
       }
     } catch (err) {
@@ -35,7 +35,7 @@ export const handler = middy(
       const statusCode = err instanceof TodoNotFoundError ? 404 : 500
       return {
         statusCode,
-        body: undefined
+        body: err
       }
     }
   })

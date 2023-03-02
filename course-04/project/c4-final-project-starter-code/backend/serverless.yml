@@ -103,6 +103,7 @@ functions:
     iamRoleStatements:
       - Effect: Allow
         Action:
+          - dynamodb:GetItem
           - dynamodb:PutItem
         Resource: !GetAtt TodosTable.Arn          
 
@@ -120,6 +121,7 @@ functions:
     iamRoleStatements:
       - Effect: Allow
         Action:
+          - dynamodb:GetItem
           - dynamodb:DeleteItem
         Resource: !GetAtt TodosTable.Arn             
 
