@@ -123,7 +123,11 @@ functions:
         Action:
           - dynamodb:GetItem
           - dynamodb:DeleteItem
-        Resource: !GetAtt TodosTable.Arn             
+        Resource: !GetAtt TodosTable.Arn
+      - Effect: Allow
+        Action:
+          - s3:DeleteObject
+        Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'               
 
   # DONE: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
@@ -139,8 +143,14 @@ functions:
     iamRoleStatements:
       - Effect: Allow
         Action:
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+        Resource: !GetAtt TodosTable.Arn    
+      - Effect: Allow
+        Action:
+          - s3:GetSignedUrl
           - s3:PutObject
-        Resource: !GetAtt AttachmentsBucket.Arn   
+        Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'
 
 resources:
   Resources:
@@ -222,7 +232,7 @@ resources:
                 - POST
                 - DELETE
                 - HEAD
-              MaxAge: ${self:provider.environment.SIGNED_URL_EXPIRATION}   
+              MaxAge: 3600 
 
     # DONE: Complete the policy below and attach it to the bucket defined above
     # For cross referencing the name of the bucket, use "!Ref AttachmentsBucket"
@@ -236,6 +246,7 @@ resources:
             - Sid: PublicReadForGetBucketObjects
               Effect: Allow
               Principal: '*'
-              Action: 's3:GetObject'
-              Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'          
+              Action:
+                - 's3:GetObject'
+              Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'      
         Bucket: !Ref AttachmentsBucket      

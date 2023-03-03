@@ -27,7 +27,7 @@ export const handler = middy(
       return {
         statusCode: 200,
         body: JSON.stringify({
-          newTodo
+          item: newTodo
         })
       }
     } catch (err) {

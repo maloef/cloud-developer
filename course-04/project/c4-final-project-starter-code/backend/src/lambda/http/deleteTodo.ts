@@ -24,7 +24,7 @@ export const handler = middy(
 
       return {
         statusCode: 204,
-        body: undefined
+        body: null
       }
     } catch (err) {
       logger.error(err)

@@ -33,13 +33,11 @@ export class TodosAccess {
       return items
     }
   
-    async createTodo(todo: TodoItem): Promise<TodoItem> {
+    async createTodo(todo: TodoItem) {
       await this.docClient.put({
         TableName: this.todosTable,
         Item: todo
       }).promise()
-  
-      return todo
     }
 
     async updateTodo(userId: string, todoId: string, todoUpdate: TodoUpdate): Promise<TodoItem> {
@@ -59,6 +57,7 @@ export class TodosAccess {
     async updateAttachmentUrl(userId: string, todoId: string, attachmentUrl: string): Promise<TodoItem> {
       const todo = await this.getTodo(userId, todoId)
       todo.attachmentUrl = attachmentUrl
+      logger.info('setting attachmentUrl ' +  attachmentUrl + ' for todo with id ' + todoId)
 
       await this.docClient.put({
         TableName: this.todosTable,
@@ -70,10 +69,14 @@ export class TodosAccess {
     
     async deleteTodo(userId: string, todoId: string) {
       const todo = await this.getTodo(userId, todoId)
+      logger.info('found todo with id ' + todoId + ', now deleting it')
 
       await this.docClient.delete({
         TableName: this.todosTable,
-        Key: todo
+        Key: {
+          'userId': todo.userId,
+          'todoId': todo.todoId
+        }
       }).promise()
     }
 

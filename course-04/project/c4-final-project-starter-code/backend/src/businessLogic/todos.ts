@@ -26,7 +26,8 @@ export async function createTodo(userId: string, createTodoRequest: CreateTodoRe
         dueDate: createTodoRequest.dueDate,
         done: false
     }
-    return todosAccess.createTodo(todo)
+    todosAccess.createTodo(todo)
+    return todo
 }
 
 export async function updateTodo(userId: string, todoId: string, updateTodoRequest: UpdateTodoRequest): Promise<TodoItem> {
@@ -40,15 +41,14 @@ export async function updateTodo(userId: string, todoId: string, updateTodoReque
 
 export async function deleteTodo(userId: string, todoId: string) {
     todosAccess.deleteTodo(userId, todoId)
+    s3Access.deleteAttachment(todoId)
 }
 
 export async function createAttachmentPresignedUrl(userId: string, todoId: string) {
-    const attachmentId = userId + '-' + todoId
-    const attachmentUrl = 'https://' + process.env.ATTACHMENT_S3_BUCKET + '.s3.amazonaws.com/' + attachmentId
-
+    const attachmentUrl = 'https://' + process.env.ATTACHMENT_S3_BUCKET + '.s3.amazonaws.com/' + todoId
     todosAccess.updateAttachmentUrl(userId, todoId, attachmentUrl)
 
-    return s3Access.createPresignedUrl(attachmentId)
+    return s3Access.createPresignedUrl(todoId)
 }
 
 
