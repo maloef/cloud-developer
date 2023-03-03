@@ -35,7 +35,7 @@ export const handler = middy(
       const statusCode = err instanceof TodoNotFoundError ? 404 : 500
       return {
         statusCode,
-        body: err
+        body: null
       }
     }
   })
