@@ -59,7 +59,10 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: !GetAtt TodosTable.Arn
+        Resource:
+          - arn:aws:dynamodb:::table/${self:provider.environment.TODOS_TABLE},
+          # For some reason region & accountId have to be specified for the index - otherwise there is an AccessDeniedException
+          - arn:aws:dynamodb:${self:provider.region}:${self:provider.environment.ACCOUNT_ID}:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_DUE_DATE_INDEX}
 
   # DONE: Configure this function - 
   # Provide iamRoleStatements property. Decide the Actions and AWS Resource. 
