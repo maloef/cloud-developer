@@ -12,19 +12,19 @@ const logger = createLogger('TodosAccess')
 export class TodosAccess {
 
     constructor(
-      private readonly docClient: DocumentClient = createDynamoDBClient(),
-      private readonly todosTable = process.env.TODOS_TABLE) {
+      private readonly docClient: DocumentClient = createDynamoDBClient()) {
     }
   
     async getTodosForUser(userId: string): Promise<TodoItem[]> {
-        logger.info('Getting all todos for user ' + userId)
+      logger.info('Getting all todos for user ' + userId)
   
       const result = await this.docClient.query({
-        TableName: this.todosTable,
+        TableName: process.env.TODOS_TABLE,
+        IndexName: process.env.TODOS_DUE_DATE_INDEX,
         KeyConditionExpression: 'userId = :userId',
         ExpressionAttributeValues: {
             ':userId': userId
-        }        
+        }
       }).promise()
   
       const items = result.Items as TodoItem[]
@@ -35,7 +35,7 @@ export class TodosAccess {
   
     async createTodo(todo: TodoItem) {
       await this.docClient.put({
-        TableName: this.todosTable,
+        TableName: process.env.TODOS_TABLE,
         Item: todo
       }).promise()
     }
@@ -47,7 +47,7 @@ export class TodosAccess {
       todo.done = todoUpdate.done
 
       await this.docClient.put({
-        TableName: this.todosTable,
+        TableName: process.env.TODOS_TABLE,
         Item: todo
       }).promise()
       
@@ -60,7 +60,7 @@ export class TodosAccess {
       logger.info('setting attachmentUrl ' +  attachmentUrl + ' for todo with id ' + todoId)
 
       await this.docClient.put({
-        TableName: this.todosTable,
+        TableName: process.env.TODOS_TABLE,
         Item: todo
       }).promise()
       
@@ -72,7 +72,7 @@ export class TodosAccess {
       logger.info('found todo with id ' + todoId + ', now deleting it')
 
       await this.docClient.delete({
-        TableName: this.todosTable,
+        TableName: process.env.TODOS_TABLE,
         Key: {
           'userId': todo.userId,
           'todoId': todo.todoId
@@ -82,7 +82,7 @@ export class TodosAccess {
 
     async getTodo(userId: string, todoId: string): Promise<TodoItem> {
       const result = await this.docClient.get({
-        TableName: this.todosTable,
+        TableName: process.env.TODOS_TABLE,
         Key: {
           'userId': userId,
           'todoId': todoId

@@ -1,4 +1,3 @@
-#org: maloef
 app: serverless-todo-app
 service: serverless-todo-app
 
@@ -20,12 +19,10 @@ provider:
     lambda: true
     apiGateway: true
 
-  # Use these variables in the functions and resources section below. For example, 
-  # ${self:provider.environment.ATTACHMENT_S3_BUCKET}
   environment:
     ACCOUNT_ID: 818222958857
     TODOS_TABLE: Todos-${self:provider.stage}
-    TODOS_CREATED_AT_INDEX: CreatedAtIndex
+    TODOS_DUE_DATE_INDEX: DueDateIndex
     ATTACHMENT_S3_BUCKET: serverless-todo-images-${self:provider.environment.ACCOUNT_ID}-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 3600
 
@@ -195,7 +192,7 @@ resources:
             AttributeType: S
           - AttributeName: todoId
             AttributeType: S
-          - AttributeName: createdAt
+          - AttributeName: dueDate
             AttributeType: S
         KeySchema:
           - AttributeName: userId
@@ -205,11 +202,11 @@ resources:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
         LocalSecondaryIndexes:
-          - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
+          - IndexName: ${self:provider.environment.TODOS_DUE_DATE_INDEX}
             KeySchema:
             - AttributeName: userId
               KeyType: HASH
-            - AttributeName: createdAt
+            - AttributeName: dueDate
               KeyType: RANGE
             Projection:
               ProjectionType: ALL      
